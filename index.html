@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta property="og:title" content="La Rioja · Arq. Francisco Valenzuela">
+<title>La Rioja · Arq. Francisco Valenzuela</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d0d0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+canvas{display:block;width:100%;height:100%;position:fixed;top:0;left:0;touch-action:none;}
+
+/* ── WELCOME ── */
+#welcome{
+  position:fixed;inset:0;z-index:60;
+  background:linear-gradient(160deg,#0d0d0f 60%,#1a1508 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .9s ease;
+}
+#welcome.hide{opacity:0;pointer-events:none;}
+#wlogo{height:80px;width:auto;margin-bottom:30px;opacity:.95;}
+#wtag{color:#c8a96e;font-size:9px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:10px;}
+#wnom{color:#fff;font-size:36px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;text-align:center;}
+#wcli{color:rgba(255,255,255,.38);font-size:11px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:48px;}
+#wline{width:1px;height:48px;background:linear-gradient(to bottom,transparent,rgba(200,169,110,.5),transparent);margin-bottom:48px;}
+#wbtn{
+  background:transparent;
+  border:1px solid rgba(200,169,110,.55);
+  border-radius:40px;padding:13px 42px;
+  color:#c8a96e;font-size:9px;letter-spacing:.3em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;
+}
+#wbtn:active{background:rgba(200,169,110,.12);border-color:#c8a96e;color:#fff;}
+
+/* ── LOADER ── */
+#ldr{
+  position:fixed;inset:0;z-index:55;background:#0d0d0f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .5s;
+}
+#ldr.hide{opacity:0;pointer-events:none;}
+#llw img{height:50px;width:auto;display:block;opacity:.7;}
+#lbw{width:120px;height:1px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden;margin-top:6px;}
+#lb{height:100%;background:#c8a96e;width:0%;transition:width .3s;}
+
+/* ── HEADER ── */
+#hdr{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  padding-top:env(safe-area-inset-top,0px);
+  background:linear-gradient(to bottom,rgba(10,10,12,.7) 40%,transparent);
+  pointer-events:none;
+}
+#hdr-in{display:flex;align-items:center;padding:12px 18px 24px;gap:12px;}
+#hlogo{height:52px;width:auto;opacity:.82;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));}
+#hspace{flex:1;}
+#hpill{
+  background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.25);
+  border-radius:20px;padding:4px 12px;
+  color:#c8a96e;font-size:8px;letter-spacing:.15em;text-transform:uppercase;
+}
+
+/* ── SCENE NAME ── */
+#sname{
+  position:fixed;
+  top:calc(env(safe-area-inset-top,0px) + 80px);
+  left:0;right:0;
+  text-align:center;
+  z-index:19;pointer-events:none;
+  color:rgba(255,255,255,.55);font-size:9px;
+  letter-spacing:.28em;text-transform:uppercase;
+  text-shadow:0 1px 10px rgba(0,0,0,.9);
+}
+
+/* ── HINT ── */
+#hint{
+  position:fixed;top:50%;left:50%;z-index:15;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  pointer-events:none;transition:opacity .8s;
+}
+#hint.hide{opacity:0;}
+#hring{
+  width:54px;height:54px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+#hring svg{width:24px;height:24px;stroke:rgba(255,255,255,.7);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+#htxt{color:rgba(255,255,255,.4);font-size:9px;letter-spacing:.22em;text-transform:uppercase;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.5;}50%{transform:scale(1.07);opacity:.9;}}
+
+/* ── BOTTOM ── */
+#bot{
+  position:fixed;bottom:0;left:0;right:0;z-index:20;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:linear-gradient(to top,rgba(10,10,12,.88) 50%,transparent);
+}
+#bot-in{display:flex;align-items:flex-end;gap:10px;padding:20px 18px 20px;}
+
+/* Thumbnails */
+#thumbs{display:flex;gap:10px;flex-shrink:0;}
+.tw{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+.tb{
+  width:76px;height:46px;border-radius:7px;overflow:hidden;
+  border:2px solid rgba(255,255,255,.1);
+  transition:border-color .25s,transform .15s;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.tb:active{transform:scale(.93);}
+.tb.active{border-color:#c8a96e;box-shadow:0 0 12px rgba(200,169,110,.35);}
+.tb img{width:100%;height:100%;object-fit:cover;display:block;}
+.tn{color:rgba(200,169,110,.7);font-size:7px;letter-spacing:.15em;text-transform:uppercase;}
+
+#bsp{flex:1;}
+
+/* Zoom */
+#zc{display:flex;flex-direction:column;align-items:center;gap:5px;}
+#zlbl{color:rgba(255,255,255,.25);font-size:7px;letter-spacing:.15em;text-transform:uppercase;}
+#zr{display:flex;gap:7px;}
+.zb{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.6);font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.zb:active{background:rgba(200,169,110,.2);border-color:#c8a96e;color:#c8a96e;}
+
+/* ── FLOAT BUTTONS ── */
+#floats{
+  position:fixed;z-index:21;top:0;right:0;
+  padding-top:calc(env(safe-area-inset-top,0px) + 80px);
+  padding-right:16px;
+  display:flex;flex-direction:column;gap:7px;
+}
+.fb{
+  width:30px;height:30px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.15);background:rgba(10,10,12,.65);
+  color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:all .15s;
+}
+.fb.on,.fb:active{background:rgba(200,169,110,.2);border-color:#c8a96e;color:#c8a96e;}
+.fb svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── INDICATORS ── */
+.ind{
+  position:fixed;left:50%;z-index:25;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 105px);
+  transform:translateX(-50%);
+  border-radius:20px;padding:4px 14px;
+  font-size:8px;letter-spacing:.15em;text-transform:uppercase;
+  opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap;
+}
+#aind{background:rgba(200,169,110,.13);border:1px solid rgba(200,169,110,.3);color:#c8a96e;}
+.ind.on{opacity:1;}
+
+/* ── SHARE TOAST ── */
+#stst{
+  position:fixed;left:50%;z-index:30;
+  top:calc(env(safe-area-inset-top,0px) + 100px);
+  transform:translateX(-50%) translateY(-16px);
+  background:rgba(15,15,18,.95);border:1px solid rgba(200,169,110,.35);
+  border-radius:12px;padding:9px 18px;
+  color:#fff;font-size:11px;opacity:0;
+  transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;
+}
+#stst.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── HIDE UI ── */
+#hideui{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
+  left:50%;transform:translateX(-50%);z-index:30;
+  background:rgba(10,10,12,.6);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:5px 16px;
+  color:rgba(255,255,255,.45);font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;white-space:nowrap;
+}
+body.uih #hdr,body.uih #bot,body.uih #floats,body.uih #sname,body.uih #aind,body.uih #hint{opacity:0;pointer-events:none;}
+body.uih #hideui{opacity:.2;}
+
+/* ── WATERMARK ── */
+#wm{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 108px);right:16px;z-index:12;pointer-events:none;}
+#wm img{height:32px;width:auto;opacity:.12;}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="ldr">
+  <div id="llw"><img src="logo.png" alt=""></div>
+  <div id="lbw"><div id="lb"></div></div>
+</div>
+
+<!-- WELCOME -->
+<div id="welcome">
+  <img id="wlogo" src="logo.png" alt="">
+  <div id="wtag">Recorrido Virtual 360°</div>
+  <div id="wnom">La Rioja</div>
+  <div id="wcli">Presentado a: Héctor</div>
+  <div id="wline"></div>
+  <button id="wbtn">Iniciar recorrido</button>
+</div>
+
+<canvas id="cv"></canvas>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-in">
+    <img id="hlogo" src="logo.png" alt="">
+    <div id="hspace"></div>
+    <div id="hpill">1 / 3</div>
+  </div>
+</div>
+
+<!-- SCENE NAME -->
+<div id="sname">Área Asador</div>
+
+<!-- WATERMARK -->
+<div id="wm"><img src="logo.png" alt=""></div>
+
+<!-- HINT -->
+<div id="hint">
+  <div id="hring"><svg viewBox="0 0 24 24"><path d="M8 12h8M4 8l4 4-4 4M20 8l-4 4 4 4"/></svg></div>
+  <div id="htxt">Arrastra para explorar</div>
+</div>
+
+<!-- FLOAT BUTTONS -->
+<div id="floats">
+  <button class="fb" id="bfs">&#x26F6;</button>
+  <button class="fb" id="bauto">&#8635;</button>
+  <button class="fb" id="breset">&#x2302;</button>
+  <button class="fb" id="bshare"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 13.5l8 4M16 6.5l-8 4"/></svg></button>
+</div>
+
+<!-- INDICATOR -->
+<div class="ind" id="aind">● Auto-rotando</div>
+
+<!-- SHARE TOAST -->
+<div id="stst">✓ Link copiado</div>
+
+<!-- BOTTOM -->
+<div id="bot">
+  <div id="bot-in">
+    <div id="thumbs"></div>
+    <div id="bsp"></div>
+    <div id="zc">
+      <div id="zlbl">Zoom</div>
+      <div id="zr">
+        <div class="zb" id="bzout">&#8722;</div>
+        <div class="zb" id="bzin">+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HIDE UI -->
+<button id="hideui">&#9660; Ocultar UI</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CONFIGURACIÓN — solo edita esta sección
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var PROYECTO  = 'La Rioja';
+var CLIENTE   = 'Héctor';
+var ESCENAS   = [
+  { src:'escena1.jpg', label:'Área Asador',  thumb:'Asador'  },
+  { src:'escena2.jpg', label:'Alberca',       thumb:'Alberca' },
+  { src:'escena3.jpg', label:'Jardín',        thumb:'Jardín'  }
+];
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// THREE.JS
+var cv  = document.getElementById('cv');
+var R   = new THREE.WebGLRenderer({canvas:cv, antialias:true});
+R.setPixelRatio(Math.min(window.devicePixelRatio,2));
+R.setSize(window.innerWidth, window.innerHeight);
+var SC3 = new THREE.Scene();
+var CAM = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+var geo = new THREE.SphereGeometry(500,72,36); geo.scale(-1,1,1);
+var mesh= new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0x111111}));
+SC3.add(mesh);
+var TL  = new THREE.TextureLoader();
+var D2R = Math.PI/180;
+
+// STATE
+var lon=0, lat=0, fov=75;
+var autoRot=false, hintOff=false, uiHid=false;
+var drag=false, tx=0, ty=0, tx0=0, ty0=0, tdrag=false, pinch0=0;
+var THRESH=6;
+
+// LOAD SCENE
+function loadScene(i){
+  document.querySelectorAll('.tb').forEach(function(t,j){t.classList.toggle('active',j===i);});
+  document.getElementById('hpill').textContent=(i+1)+' / '+ESCENAS.length;
+  document.getElementById('sname').textContent=ESCENAS[i].label;
+  lon=0; lat=0;
+  TL.load(ESCENAS[i].src, function(tex){
+    tex.minFilter=THREE.LinearFilter; tex.magFilter=THREE.LinearFilter;
+    var m=new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0});
+    mesh.material=m;
+    var op=0,fi=setInterval(function(){
+      op+=0.055; m.opacity=Math.min(op,1);
+      if(op>=1){m.transparent=false;clearInterval(fi);}
+    },16);
+  });
+}
+
+// THUMBNAILS
+var tEl=document.getElementById('thumbs');
+ESCENAS.forEach(function(e,i){
+  var w=document.createElement('div');w.className='tw';
+  var b=document.createElement('div');b.className='tb'+(i===0?' active':'');
+  var ig=document.createElement('img');ig.src=e.src;ig.alt=e.thumb;
+  b.appendChild(ig);w.appendChild(b);
+  var l=document.createElement('div');l.className='tn';l.textContent=e.thumb;
+  w.appendChild(l);
+  w.addEventListener('click',function(){loadScene(i);dimHint();});
+  tEl.appendChild(w);
+});
+
+// HINT
+function dimHint(){if(!hintOff){hintOff=true;document.getElementById('hint').classList.add('hide');}}
+
+// MOUSE
+cv.addEventListener('mousedown',function(e){
+  drag=false;tx=e.clientX;ty=e.clientY;tx0=e.clientX;ty0=e.clientY;
+  autoRot=false;document.getElementById('aind').classList.remove('on');document.getElementById('bauto').classList.remove('on');
+  dimHint();
+});
+window.addEventListener('mousemove',function(e){
+  if(!e.buttons)return;
+  if(Math.abs(e.clientX-tx0)>THRESH||Math.abs(e.clientY-ty0)>THRESH)drag=true;
+  if(!drag)return;
+  lon-=(e.clientX-tx)*.22; lat+=(e.clientY-ty)*.22;
+  lat=Math.max(-85,Math.min(85,lat));
+  tx=e.clientX; ty=e.clientY;
+});
+
+// TOUCH
+cv.addEventListener('touchstart',function(e){
+  dimHint();
+  autoRot=false;document.getElementById('aind').classList.remove('on');document.getElementById('bauto').classList.remove('on');
+  if(e.touches.length===1){
+    tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+    tx0=tx;ty0=ty;tdrag=false;
+  }
+  if(e.touches.length===2){
+    pinch0=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+  }
+},{passive:true});
+
+cv.addEventListener('touchmove',function(e){
+  if(e.touches.length===1){
+    var nx=e.touches[0].clientX,ny=e.touches[0].clientY;
+    if(Math.abs(nx-tx0)>THRESH||Math.abs(ny-ty0)>THRESH)tdrag=true;
+    if(tdrag){lon-=(nx-tx)*.28;lat+=(ny-ty)*.28;lat=Math.max(-85,Math.min(85,lat));}
+    tx=nx;ty=ny;
+  }
+  if(e.touches.length===2){
+    var d=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+    fov*=pinch0/d;fov=Math.max(30,Math.min(110,fov));CAM.fov=fov;CAM.updateProjectionMatrix();pinch0=d;
+  }
+},{passive:true});
+
+// WHEEL
+cv.addEventListener('wheel',function(e){
+  e.preventDefault();fov+=e.deltaY*.04;fov=Math.max(30,Math.min(110,fov));
+  CAM.fov=fov;CAM.updateProjectionMatrix();dimHint();
+},{passive:false});
+
+// ZOOM
+document.getElementById('bzin').addEventListener('click',function(){fov=Math.max(30,fov-10);CAM.fov=fov;CAM.updateProjectionMatrix();});
+document.getElementById('bzout').addEventListener('click',function(){fov=Math.min(110,fov+10);CAM.fov=fov;CAM.updateProjectionMatrix();});
+
+// AUTO ROTATE
+document.getElementById('bauto').addEventListener('click',function(){
+  autoRot=!autoRot;
+  document.getElementById('aind').classList.toggle('on',autoRot);
+  this.classList.toggle('on',autoRot);
+});
+
+// FULLSCREEN
+document.getElementById('bfs').addEventListener('click',function(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();this.textContent='✕';}
+  else{document.exitFullscreen&&document.exitFullscreen();}
+});
+document.addEventListener('fullscreenchange',function(){
+  if(!document.fullscreenElement)document.getElementById('bfs').textContent='⛶';
+  setTimeout(function(){R.setSize(window.innerWidth,window.innerHeight);CAM.aspect=window.innerWidth/window.innerHeight;CAM.updateProjectionMatrix();},150);
+});
+
+// RESET
+document.getElementById('breset').addEventListener('click',function(){lon=0;lat=0;fov=75;CAM.fov=fov;CAM.updateProjectionMatrix();});
+
+// SHARE
+document.getElementById('bshare').addEventListener('click',function(){
+  var url=window.location.href;
+  if(navigator.share){navigator.share({title:PROYECTO+' · Arq. Francisco Valenzuela',url:url}).catch(function(){});return;}
+  if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){showT('✓ Link copiado');});}
+  else{window.prompt('Copia:',url);}
+});
+function showT(m){var t=document.getElementById('stst');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2500);}
+
+// HIDE UI
+var hu=document.getElementById('hideui');
+hu.addEventListener('click',function(e){
+  e.stopPropagation();uiHid=!uiHid;
+  document.body.classList.toggle('uih',uiHid);
+  hu.textContent=uiHid?'▲ Mostrar UI':'▼ Ocultar UI';
+});
+cv.addEventListener('click',function(){
+  if(uiHid&&!tdrag){uiHid=false;document.body.classList.remove('uih');hu.textContent='▼ Ocultar UI';}
+});
+
+// WELCOME
+document.getElementById('wbtn').addEventListener('click',function(){
+  var w=document.getElementById('welcome');
+  w.classList.add('hide');
+  setTimeout(function(){w.style.display='none';},950);
+});
+
+// KEYBOARD
+window.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')lon-=2;if(e.key==='ArrowRight')lon+=2;
+  if(e.key==='ArrowUp')lat=Math.min(85,lat+2);if(e.key==='ArrowDown')lat=Math.max(-85,lat-2);
+  if(e.key==='+'||e.key==='='){fov=Math.max(30,fov-5);CAM.fov=fov;CAM.updateProjectionMatrix();}
+  if(e.key==='-'){fov=Math.min(110,fov+5);CAM.fov=fov;CAM.updateProjectionMatrix();}
+  ESCENAS.forEach(function(e,i){if(e.key===(i+1)+'')loadScene(i);});
+  if(e.key==='f'||e.key==='F')document.getElementById('bfs').click();
+  if(e.key==='r'||e.key==='R')document.getElementById('bauto').click();
+});
+
+// RESIZE
+window.addEventListener('resize',function(){
+  R.setSize(window.innerWidth,window.innerHeight);
+  CAM.aspect=window.innerWidth/window.innerHeight;CAM.updateProjectionMatrix();
+});
+
+// RENDER LOOP
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRot)lon+=0.08;
+  lat=Math.max(-85,Math.min(85,lat));
+  var phi=(90-lat)*D2R,th=lon*D2R;
+  CAM.lookAt(500*Math.sin(phi)*Math.cos(th),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(th));
+  R.render(SC3,CAM);
+}
+animate();
+
+// LOADER
+var lb=document.getElementById('lb');lb.style.width='40%';
+var pi=new Image();
+pi.onload=pi.onerror=function(){
+  lb.style.width='100%';
+  setTimeout(function(){document.getElementById('ldr').classList.add('hide');loadScene(0);},500);
+};
+pi.src=ESCENAS[0].src;
+</script>
+</body>
+</html>
