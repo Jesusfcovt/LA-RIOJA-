@@ -182,6 +182,65 @@ body.uih #hideui{opacity:.2;}
 /* ── WATERMARK ── */
 #wm{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 108px);right:16px;z-index:12;pointer-events:none;}
 #wm img{height:32px;width:auto;opacity:.12;}
+
+/* ── HOTSPOTS ── */
+.hs{
+  position:fixed;z-index:18;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;transition:opacity .25s;
+}
+.hs.off{opacity:0;pointer-events:none;}
+.hsdot{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(10,10,12,.55);border:1.5px solid rgba(200,169,110,.7);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:hspulse 2.2s ease-in-out infinite;
+}
+.hsdot svg{width:18px;height:18px;stroke:#c8a96e;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.hslbl{
+  background:rgba(10,10,12,.7);border:1px solid rgba(200,169,110,.35);
+  border-radius:14px;padding:3px 12px;
+  color:#c8a96e;font-size:8px;letter-spacing:.15em;text-transform:uppercase;
+  white-space:nowrap;
+}
+@keyframes hspulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(200,169,110,.4);}
+  50%{box-shadow:0 0 0 8px rgba(200,169,110,0);}
+}
+.hsdel{
+  position:absolute;top:-6px;right:-6px;
+  width:18px;height:18px;border-radius:50%;
+  background:#c0392b;color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid #0d0d0f;
+}
+
+/* ── EDIT PANEL ── */
+#bedit.on{background:rgba(200,169,110,.25);border-color:#c8a96e;color:#c8a96e;}
+#editPanel{
+  display:none;position:fixed;left:12px;right:12px;
+  top:calc(env(safe-area-inset-top,0px) + 66px);z-index:40;
+  background:rgba(10,10,12,.92);border:1px solid rgba(200,169,110,.4);
+  border-radius:12px;padding:12px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#editPanel.show{display:block;}
+#editMsg{color:#c8a96e;font-size:10px;letter-spacing:.08em;margin-bottom:8px;}
+#editOut{
+  width:100%;height:70px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.15);border-radius:6px;
+  color:rgba(255,255,255,.75);font-size:9px;font-family:monospace;
+  padding:6px;resize:none;margin-bottom:8px;
+}
+#editBtns{display:flex;gap:8px;}
+#editBtns button{
+  flex:1;padding:8px;border-radius:8px;border:1px solid rgba(200,169,110,.4);
+  background:rgba(200,169,110,.12);color:#c8a96e;font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+}
+#editBtns button:active{background:rgba(200,169,110,.3);}
 </style>
 </head>
 <body>
@@ -219,6 +278,9 @@ body.uih #hideui{opacity:.2;}
 <!-- WATERMARK -->
 <div id="wm"><img src="logo.png" alt=""></div>
 
+<!-- HOTSPOTS -->
+<div id="hsLayer"></div>
+
 <!-- HINT -->
 <div id="hint">
   <div id="hring"><svg viewBox="0 0 24 24"><path d="M8 12h8M4 8l4 4-4 4M20 8l-4 4 4 4"/></svg></div>
@@ -231,6 +293,17 @@ body.uih #hideui{opacity:.2;}
   <button class="fb" id="bauto">&#8635;</button>
   <button class="fb" id="breset">&#x2302;</button>
   <button class="fb" id="bshare"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 13.5l8 4M16 6.5l-8 4"/></svg></button>
+  <button class="fb" id="bedit" title="Editar hotspots">&#9998;</button>
+</div>
+
+<!-- EDIT PANEL -->
+<div id="editPanel">
+  <div id="editMsg">Modo edición: toca la escena para poner un hotspot</div>
+  <textarea id="editOut" readonly></textarea>
+  <div id="editBtns">
+    <button id="bcopy">Copiar configuración</button>
+    <button id="bclear">Borrar todos (esta escena)</button>
+  </div>
 </div>
 
 <!-- INDICATOR -->
@@ -265,9 +338,13 @@ body.uih #hideui{opacity:.2;}
 var PROYECTO  = 'La Rioja';
 var CLIENTE   = 'Héctor';
 var ESCENAS   = [
-  { src:'escena1.jpg', label:'Área Asador',  thumb:'Asador'  },
-  { src:'escena2.jpg', label:'Alberca',       thumb:'Alberca' },
-  { src:'escena3.jpg', label:'Jardín',        thumb:'Jardín'  }
+  { src:'escena1.jpg', label:'Área Asador',  thumb:'Asador',
+    hotspots:[ {target:1, lon:60,  lat:-8, label:'Ir a Alberca'} ] },
+  { src:'escena2.jpg', label:'Alberca',       thumb:'Alberca',
+    hotspots:[ {target:0, lon:-120,lat:-8, label:'Ir a Asador'},
+               {target:2, lon:40,  lat:-8, label:'Ir a Jardín'} ] },
+  { src:'escena3.jpg', label:'Jardín',        thumb:'Jardín',
+    hotspots:[ {target:1, lon:-60, lat:-8, label:'Ir a Alberca'} ] }
 ];
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -291,7 +368,9 @@ var drag=false, tx=0, ty=0, tx0=0, ty0=0, tdrag=false, pinch0=0;
 var THRESH=6;
 
 // LOAD SCENE
+var curScene=0, hsEls=[];
 function loadScene(i){
+  curScene=i;
   document.querySelectorAll('.tb').forEach(function(t,j){t.classList.toggle('active',j===i);});
   document.getElementById('hpill').textContent=(i+1)+' / '+ESCENAS.length;
   document.getElementById('sname').textContent=ESCENAS[i].label;
@@ -305,7 +384,125 @@ function loadScene(i){
       if(op>=1){m.transparent=false;clearInterval(fi);}
     },16);
   });
+  buildHotspots(i);
 }
+
+// HOTSPOTS (editables en vivo)
+var RC=new THREE.Raycaster();
+var editMode=false, dragHs=null;
+
+function buildHotspots(i){
+  var layer=document.getElementById('hsLayer');
+  layer.innerHTML='';
+  hsEls=(ESCENAS[i].hotspots||[]).map(function(h){
+    var el=document.createElement('div');el.className='hs';
+    el.innerHTML='<div class="hsdot"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div><div class="hslbl">'+h.label+'</div>';
+    if(editMode){
+      var del=document.createElement('div');del.className='hsdel';del.textContent='✕';
+      del.addEventListener('click',function(ev){
+        ev.stopPropagation();
+        ESCENAS[i].hotspots.splice(ESCENAS[i].hotspots.indexOf(h),1);
+        buildHotspots(i);refreshEditOut();
+      });
+      el.appendChild(del);
+      el.addEventListener('mousedown',function(ev){ev.stopPropagation();dragHs={h:h,el:el};});
+      el.addEventListener('touchstart',function(ev){ev.stopPropagation();dragHs={h:h,el:el};},{passive:true});
+    } else {
+      el.addEventListener('click',function(e){e.stopPropagation();dimHint();loadScene(h.target);});
+    }
+    layer.appendChild(el);
+    return {el:el, data:h};
+  });
+}
+
+function updateHotspots(){
+  hsEls.forEach(function(o){
+    var phi=(90-o.data.lat)*D2R, th=o.data.lon*D2R;
+    var vec=new THREE.Vector3(500*Math.sin(phi)*Math.cos(th),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(th));
+    var proj=vec.clone().project(CAM);
+    var behind=proj.z>1;
+    var x=(proj.x*0.5+0.5)*window.innerWidth;
+    var y=(1-(proj.y*0.5+0.5))*window.innerHeight;
+    o.el.classList.toggle('off', behind || x<0 || x>window.innerWidth || y<0 || y>window.innerHeight);
+    o.el.style.left=x+'px';
+    o.el.style.top=y+'px';
+  });
+}
+
+// Convierte una posición de pantalla (clientX/Y) a {lon,lat} sobre la esfera
+function screenToLonLat(clientX,clientY){
+  var ndc=new THREE.Vector2((clientX/window.innerWidth)*2-1, -(clientY/window.innerHeight)*2+1);
+  RC.setFromCamera(ndc,CAM);
+  var hit=RC.intersectObject(mesh)[0];
+  if(!hit)return null;
+  var p=hit.point;
+  var lat=90-Math.acos(Math.max(-1,Math.min(1,p.y/500)))/D2R;
+  var lon=Math.atan2(p.z,p.x)/D2R;
+  return {lon:lon,lat:lat};
+}
+
+function refreshEditOut(){
+  var out=document.getElementById('editOut');
+  var txt='ESCENAS[*].hotspots =\n';
+  ESCENAS.forEach(function(e,i){
+    txt+=(i+1)+'. '+e.label+':\n';
+    (e.hotspots||[]).forEach(function(h){
+      txt+='   -> '+ESCENAS[h.target].label+'  lon:'+h.lon.toFixed(1)+' lat:'+h.lat.toFixed(1)+' label:"'+h.label+'"\n';
+    });
+  });
+  out.value=txt;
+}
+
+// TOGGLE EDIT MODE
+document.getElementById('bedit').addEventListener('click',function(){
+  editMode=!editMode;
+  this.classList.toggle('on',editMode);
+  document.getElementById('editPanel').classList.toggle('show',editMode);
+  buildHotspots(curScene);
+  if(editMode)refreshEditOut();
+});
+
+// CLICK EN LA ESCENA (modo edición) -> agrega hotspot nuevo
+cv.addEventListener('click',function(e){
+  if(!editMode || tdrag || drag)return;
+  var pos=screenToLonLat(e.clientX,e.clientY);
+  if(!pos)return;
+  var opciones=ESCENAS.map(function(e,idx){return idx+'='+e.label;}).join(' | ');
+  var t=window.prompt('Este hotspot lleva a qué escena?\n'+opciones,String((curScene+1)%ESCENAS.length));
+  if(t===null)return;
+  var ti=parseInt(t,10);
+  if(isNaN(ti)||ti<0||ti>=ESCENAS.length)return;
+  var lbl=window.prompt('Texto del hotspot:','Ir a '+ESCENAS[ti].label)||('Ir a '+ESCENAS[ti].label);
+  if(!ESCENAS[curScene].hotspots)ESCENAS[curScene].hotspots=[];
+  ESCENAS[curScene].hotspots.push({target:ti,lon:pos.lon,lat:pos.lat,label:lbl});
+  buildHotspots(curScene);refreshEditOut();
+});
+
+// ARRASTRAR HOTSPOT (modo edición)
+window.addEventListener('mousemove',function(e){
+  if(!dragHs)return;
+  var pos=screenToLonLat(e.clientX,e.clientY);
+  if(pos){dragHs.h.lon=pos.lon;dragHs.h.lat=pos.lat;updateHotspots();}
+});
+window.addEventListener('touchmove',function(e){
+  if(!dragHs||!e.touches[0])return;
+  var pos=screenToLonLat(e.touches[0].clientX,e.touches[0].clientY);
+  if(pos){dragHs.h.lon=pos.lon;dragHs.h.lat=pos.lat;updateHotspots();}
+},{passive:true});
+window.addEventListener('mouseup',function(){if(dragHs){refreshEditOut();dragHs=null;}});
+window.addEventListener('touchend',function(){if(dragHs){refreshEditOut();dragHs=null;}});
+
+// BOTONES DEL PANEL
+document.getElementById('bcopy').addEventListener('click',function(){
+  var out=document.getElementById('editOut');
+  out.select();
+  if(navigator.clipboard){navigator.clipboard.writeText(out.value).then(function(){showT('✓ Copiado');});}
+  else{document.execCommand('copy');showT('✓ Copiado');}
+});
+document.getElementById('bclear').addEventListener('click',function(){
+  ESCENAS[curScene].hotspots=[];
+  buildHotspots(curScene);refreshEditOut();
+});
 
 // THUMBNAILS
 var tEl=document.getElementById('thumbs');
@@ -446,6 +643,7 @@ function animate(){
   var phi=(90-lat)*D2R,th=lon*D2R;
   CAM.lookAt(500*Math.sin(phi)*Math.cos(th),500*Math.cos(phi),500*Math.sin(phi)*Math.sin(th));
   R.render(SC3,CAM);
+  updateHotspots();
 }
 animate();
 
